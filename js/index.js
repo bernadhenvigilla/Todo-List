@@ -1,249 +1,160 @@
 'use strict';
 
-$(function () {
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-  var $list = $('.todo-list');
-  var $clonelist = $('#clone-list');
-  var $input = $('.todo-input');
-  var completeNum = 0;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  //Methods for Adding
-  function addTodo(text) {
-    //create item
-    var $li = $('<li class="li-item ui-state-default">');
-    var $dragable = $('<span class="dragable"></span>');
-    var $checkbox = $('<span class="checkbox"></span>');
-    var $text = $('<span class="text">').text(text);
-    var $remove = $('<span class="remove"></span>');
-    $li.append($dragable).append($checkbox).append($text).append($remove);
-    //$li.append($text);
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-    //add it to the list
-    $list.append($li);
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-    //ready for DnD
-    $li.ready(initListItem($li, $checkbox, $remove));
+var _window = window;
+var React = _window.React;
+var ReactDOM = _window.ReactDOM;
+
+var TodoList = function (_React$Component) {
+  _inherits(TodoList, _React$Component);
+
+  function TodoList(props) {
+    _classCallCheck(this, TodoList);
+
+    var _this = _possibleConstructorReturn(this, _React$Component.call(this, props));
+
+    _this.state = JSON.parse(localStorage.getItem('todoapp')) || {
+      input: '',
+      todos: [{
+        value: 'This is a sample TODO!',
+        id: _this.guid()
+      }]
+    };
+    _this.addTodo = _this.addTodo.bind(_this);
+    _this.handleInput = _this.handleInput.bind(_this);
+    _this.removeTodo = _this.removeTodo.bind(_this);
+    return _this;
   }
 
-  //Methods for send
-  $('.todo-form').bind('submit', function (e) {
-    //stop the default behavior
-    e.preventDefault();
+  TodoList.prototype.componentDidMount = function componentDidMount() {
+    this.todoInput.focus();
+  };
 
-    //get the text
-    var text = $input.val();
-    if (text) {
+  TodoList.prototype.componentDidUpdate = function componentDidUpdate() {
+    localStorage.setItem('todoapp', JSON.stringify(this.state));
+  };
 
-      //add
-      addTodo(text);
+  TodoList.prototype.addTodo = function addTodo() {
+    var newTodo = {
+      value: this.state.input,
+      id: this.guid()
+    };
 
-      //delete the value
-      $input.val('');
+    this.setState(function (state) {
+      return {
+        todos: [].concat(state.todos, [newTodo]),
+        input: ''
+      };
+    });
+  };
+
+  TodoList.prototype.handleInput = function handleInput(evt) {
+    if (evt.nativeEvent.key === "Enter") {
+      this.addTodo();
     } else {
-      $('.container').animate({ left: "-5px" }, 100).animate({ left: "20px" }, 100).animate({ left: "-10px" }, 100).animate({ left: "10px" }, 100).animate({ left: "0px" }, 100);
-    }
-  });
-
-  //Sortable DnD
-  $('.todo-list').sortable({
-    axis: 'y',
-    handle: ".dragable",
-    revert: 100,
-    scroll: false,
-    placeholder: "sortable-placeholder",
-    cursor: 'move',
-    start: function start(event, ui) {
-      ui.helper.addClass("exclude-me");
-      $(".todo-list .li-item:not(.exclude-me)").css("visibility", "hidden");
-      ui.helper.data("clone").hide();
-      $(".clone-list .li-item").css("visibility", "visible");
-    },
-    stop: function stop(event, ui) {
-      $(".todo-list .li-item.exclude-me").each(function () {
-        var item = $(this);
-        var clone = item.data("clone");
-        var position = item.position();
-
-        clone.css("left", position.left);
-        clone.css("top", position.top);
-        clone.show();
-
-        item.removeClass("exclude-me");
-      });
-
-      $(".todo-list .li-item").css("visibility", "visible");
-      $(".clone-list .li-item").css("visibility", "hidden");
-    },
-    change: function change(e, ui) {
-      $(".todo-list .li-item:not(.exclude-me)").each(function () {
-        var item = $(this);
-        var clone = item.data("clone");
-        clone.stop(true, false);
-        var position = item.position();
-        clone.css({
-          left: position.left,
-          top: position.top
-        });
+      this.setState({
+        input: evt.target.value
       });
     }
-  });
+  };
 
-  //Button Interactions
-  $('.my-func').hover(function () {
-    $(this).addClass('hover');
-  }, function () {
-    $(this).removeClass('hover');
-  });
+  TodoList.prototype.removeTodo = function removeTodo(id) {
+    var _this2 = this;
 
-  $('h1').click(function () {
-    var num = $('.todo-list .li-item').length;
-    var numComp = $('.todo-list .complete').length;
-    //alert(numComp);
-    if (num == numComp) {
-      if (num) {
-
-        $('.li-item').each(function () {
-          $(this).removeClass('complete');
-        });
-        $('footer').removeClass('active').prop("disabled", true);
-        completeNum = 0;
-      }
-    } else {
-      if (num) {
-        $('.li-item').each(function () {
-
-          $(this).addClass('complete');
-          completeNum++;
-        });
-        $('footer').addClass('active').prop("disabled", false);
-      }
-    }
-  });
-  $('h1').on('mousedown', function () {
-    $(this).addClass('click');
-  });
-  $('h1').on('mouseup', function () {
-    $(this).removeClass('click');
-  });
-
-  $('#delete').click(function () {
-    $('.complete').each(function () {
-      $(this).remove();
+    this.setState(function (state) {
+      return {
+        todos: state.todos.map(function (todo) {
+          if (todo.id !== id) {
+            return todo;
+          } else {
+            return _extends({}, todo, { deleted: true });
+          }
+        })
+      };
     });
 
-    completeNum = 0;
-    $('footer').removeClass('active').prop("disabled", true);
-    $('.my-list').height(272);
-
-    $(".todo-list .li-item").each(function () {
-      var item = $(this);
-      var clone = item.data("clone");
-      var position = item.position();
-
-      clone.css("left", position.left);
-      clone.css("top", position.top);
-    });
     setTimeout(function () {
-      $('#my-list').perfectScrollbar('update');
-    }, 300);
-  });
-  $('.todo-input').focus(function () {
-    $('.icn-input').fadeOut('fast');
-    $('.todo-add').removeClass('not-focused'); //.prop("disabled", false);
-  }).blur(function () {
-    $('.icn-input').fadeIn('fast');
-    var tmpText = $('.todo-input').val();
-    if (!tmpText && !$('.todo-add').hasClass('not-focused')) {
-      $('.todo-add').addClass('not-focused'); //.prop("disabled", true);
-    }
-  });
-
-  $('.todo-add').hover(function () {
-    $(this).addClass('hover');
-  }, function () {
-    $(this).removeClass('hover');
-  });
-
-  $('.todo-add').click(function () {
-    $(this).addClass('click');
-    if (!$('.todo-input').focus()) {
-      $(this).addClass('not-focused'); //.prop("disabled", true);
-    }
-    setTimeout(function () {
-      $('.todo-add').addClass('clickdone');
-    }, 400);
-    setTimeout(function () {
-      $('.todo-add').removeClass('click');
-      $('.todo-add').removeClass('clickdone');
-    }, 800);
-  });
-
-  //Functioncs
-  function initListItem(li, checkbox, remove) {
-    var item = li;
-    var itemClone = item.clone();
-    item.data('clone', itemClone);
-    var position = item.position();
-    //alert(position.top);
-    itemClone.css({
-      left: position.left,
-      top: position.top,
-      visibility: 'hidden'
-    }).addClass('clone');
-    $('#clone-list').append(itemClone);
-    //Complete
-    checkbox.click(function () {
-      if (li.hasClass('complete')) {
-        li.removeClass('complete');
-        itemClone.removeClass('complete');
-        completeNum--;
-        if (!completeNum) {
-          $('footer').removeClass('active').prop("disabled", true);
-          $('.my-list').height(272);
-        }
-      } else {
-        li.addClass('complete');
-        itemClone.addClass('complete');
-        completeNum++;
-        if (completeNum) {
-          $('footer').addClass('active').prop("disabled", false);
-          $('.my-list').height(224);
-        }
-      }
-    });
-
-    //remove
-    remove.click(function () {
-      if (li.hasClass('complete')) {
-        completeNum--;
-        if (!completeNum) {
-          $('footer').removeClass('active').prop("disabled", true);
-          $('.my-list').height(272);
-        }
-      }
-      li.remove();
-      itemClone.remove();
-
-      $(".todo-list .li-item").each(function () {
-        var item = $(this);
-        var clone = item.data("clone");
-        var position = item.position();
-
-        clone.css("left", position.left);
-        clone.css("top", position.top);
+      _this2.setState(function (state) {
+        return {
+          todos: state.todos.filter(function (t) {
+            return t.id !== id;
+          })
+        };
       });
-      $('#my-list').perfectScrollbar('update');
+    }, 1000);
+  };
+
+  TodoList.prototype.guid = function guid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0,
+          v = c == 'x' ? r : r & 0x3 | 0x8;
+      return v.toString(16);
     });
+  };
 
-    $('#my-list').perfectScrollbar('update');
-    $(".todo-list").sortable('refresh');
-  }
+  TodoList.prototype.render = function render() {
+    var _this3 = this;
 
-  //init
-  $('#my-list').perfectScrollbar();
-  $('.li-item').each(function () {
-    var checkbox = $(this).children('.checkbox');
-    var remove = $(this).children('.remove');
-    initListItem($(this), checkbox, remove);
-  });
-});
+    return React.createElement(
+      'div',
+      { className: 'todo-list' },
+      React.createElement(
+        'h1',
+        null,
+        'Reactjs Todo List'
+      ),
+      this.state.todos.map(function (t) {
+        return React.createElement(Todo, _extends({ key: t.id }, t, { onClick: function onClick() {
+            return _this3.removeTodo(t.id);
+          } }));
+      }),
+      React.createElement(
+        'div',
+        { className: 'controls' },
+        React.createElement('input', { type: 'text',
+          value: this.state.input,
+          onChange: this.handleInput,
+          onKeyDown: this.handleInput,
+          ref: function ref(input) {
+            _this3.todoInput = input;
+          } }),
+        React.createElement(
+          'button',
+          { onClick: this.addTodo },
+          'Add'
+        )
+      )
+    );
+  };
+
+  return TodoList;
+}(React.Component);
+
+var Todo = function Todo(_ref) {
+  var value = _ref.value;
+  var onClick = _ref.onClick;
+  var deleted = _ref.deleted;
+  return React.createElement(
+    'div',
+    { className: 'todo ' + (deleted ? 'deleted' : '') },
+    React.createElement(
+      'button',
+      { className: 'remove', onClick: onClick },
+      '×'
+    ),
+    React.createElement(
+      'div',
+      null,
+      value
+    )
+  );
+};
+
+ReactDOM.render(React.createElement(TodoList, null), document.querySelector('#app'));
